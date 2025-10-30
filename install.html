@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>動画ダウンロードツール</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            margin-top: 30px;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #2575fc;
+            margin-bottom: 20px;
+            font-size: 2.2rem;
+        }
+        
+        .description {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .input-group {
+            display: flex;
+            margin-bottom: 25px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px 0 0 8px;
+            font-size: 16px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            border-color: #2575fc;
+        }
+        
+        button {
+            background: #2575fc;
+            color: white;
+            border: none;
+            padding: 15px 25px;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+        }
+        
+        button:hover {
+            background: #1a68e3;
+        }
+        
+        .supported-sites {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .supported-sites h2 {
+            color: #2575fc;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+        
+        .sites-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .site-tag {
+            background: #e9ecef;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .results {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .video-info {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .thumbnail {
+            width: 160px;
+            height: 90px;
+            background: #ddd;
+            border-radius: 8px;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .video-details {
+            flex: 1;
+        }
+        
+        .video-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .download-options {
+            margin-top: 15px;
+        }
+        
+        .option {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .download-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s;
+        }
+        
+        .download-btn:hover {
+            background: #218838;
+        }
+        
+        .disclaimer {
+            margin-top: 30px;
+            padding: 15px;
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            color: #856404;
+            font-size: 14px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .spinner {
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #2575fc;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            input[type="text"] {
+                border-radius: 8px;
+                margin-bottom: 10px;
+            }
+            
+            button {
+                border-radius: 8px;
+                width: 100%;
+            }
+            
+            .video-info {
+                flex-direction: column;
+            }
+            
+            .thumbnail {
+                width: 100%;
+                height: 180px;
+                margin-right: 0;
+                margin-bottom: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>動画ダウンロードツール</h1>
+        <p class="description">
+            サポートされている動画サイトのURLを入力すると、動画をダウンロードできます。<br>
+            高品質なMP4形式やその他の形式で保存可能です。
+        </p>
+        
+        <div class="supported-sites">
+            <h2>対応サイト例</h2>
+            <div class="sites-list">
+                <div class="site-tag">YouTube</div>
+                <div class="site-tag">Vimeo</div>
+                <div class="site-tag">Dailymotion</div>
+                <div class="site-tag">Twitter</div>
+                <div class="site-tag">Instagram</div>
+                <div class="site-tag">Facebook</div>
+                <div class="site-tag">TikTok</div>
+                <div class="site-tag">その他多数</div>
+            </div>
+        </div>
+        
+        <div class="input-group">
+            <input type="text" id="videoUrl" placeholder="動画のURLを入力してください（例: https://www.youtube.com/watch?v=...）">
+            <button id="downloadBtn">解析</button>
+        </div>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>動画情報を取得中...</p>
+        </div>
+        
+        <div class="results" id="results">
+            <div class="video-info">
+                <div class="thumbnail">サムネイル</div>
+                <div class="video-details">
+                    <div class="video-title" id="videoTitle">動画タイトル</div>
+                    <div class="video-duration" id="videoDuration">長さ: 00:00</div>
+                    <div class="video-author" id="videoAuthor">投稿者: 不明</div>
+                </div>
+            </div>
+            
+            <div class="download-options">
+                <h3>ダウンロードオプション</h3>
+                <div class="option">
+                    <div>
+                        <strong>MP4 - 高品質 (1080p)</strong><br>
+                        <small>推奨、最高画質</small>
+                    </div>
+                    <button class="download-btn" data-quality="1080p">ダウンロード</button>
+                </div>
+                <div class="option">
+                    <div>
+                        <strong>MP4 - 標準品質 (720p)</strong><br>
+                        <small>バランスの取れた品質</small>
+                    </div>
+                    <button class="download-btn" data-quality="720p">ダウンロード</button>
+                </div>
+                <div class="option">
+                    <div>
+                        <strong>MP4 - 低品質 (480p)</strong><br>
+                        <small>ファイルサイズ最小</small>
+                    </div>
+                    <button class="download-btn" data-quality="480p">ダウンロード</button>
+                </div>
+                <div class="option">
+                    <div>
+                        <strong>MP3 - 音声のみ</strong><br>
+                        <small>音楽やポッドキャスト用</small>
+                    </div>
+                    <button class="download-btn" data-quality="audio">ダウンロード</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="disclaimer">
+            <strong>注意:</strong> このツールは教育目的で提供されています。動画のダウンロードは著作権法および各サービスの利用規約に準拠する責任はユーザーにあります。権利者の許可なくコンテンツをダウンロードしないでください。
+        </div>
+    </div>
+
+    <script>
+// フロントエンドのJavaScript部分を更新
+const API_BASE = 'http://localhost:5000/api';
+
+// 対応サイトを取得
+fetch(`${API_BASE}/supported-sites`)
+    .then(response => response.json())
+    .then(data => {
+        const sitesList = document.querySelector('.sites-list');
+        sitesList.innerHTML = ''; // 既存の内容をクリア
+        
+        data.sites.forEach(site => {
+            const siteTag = document.createElement('div');
+            siteTag.className = 'site-tag';
+            siteTag.textContent = site;
+            sitesList.appendChild(siteTag);
+        });
+    });
+
+// 動画情報取得
+document.getElementById('downloadBtn').addEventListener('click', async function() {
+    const url = document.getElementById('videoUrl').value.trim();
+    
+    if (!url) {
+        alert('URLを入力してください');
+        return;
+    }
+    
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('results').style.display = 'none';
+    
+    try {
+        const response = await fetch(`${API_BASE}/info`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: url })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.error || '情報の取得に失敗しました');
+        }
+        
+        // 動画情報を表示
+        document.getElementById('videoTitle').textContent = data.title;
+        document.getElementById('videoDuration').textContent = `長さ: ${formatDuration(data.duration)}`;
+        document.getElementById('videoAuthor').textContent = `投稿者: ${data.uploader}`;
+        
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('results').style.display = 'block';
+        
+    } catch (error) {
+        document.getElementById('loading').style.display = 'none';
+        alert(`エラー: ${error.message}`);
+    }
+});
+
+// ダウンロード処理
+document.querySelectorAll('.download-btn').forEach(button => {
+    button.addEventListener('click', async function() {
+        const quality = this.getAttribute('data-quality');
+        const url = document.getElementById('videoUrl').value;
+        
+        if (!url) {
+            alert('まずURLを入力して解析してください');
+            return;
+        }
+        
+        try {
+            // ダウンロード開始
+            const response = await fetch(`${API_BASE}/download`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    url: url, 
+                    quality: quality 
+                })
+            });
+            
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'ダウンロードの開始に失敗しました');
+            }
+            
+            const taskId = data.task_id;
+            monitorDownloadProgress(taskId);
+            
+        } catch (error) {
+            alert(`エラー: ${error.message}`);
+        }
+    });
+});
+
+// ダウンロード進捗を監視
+async function monitorDownloadProgress(taskId) {
+    const progressInterval = setInterval(async () => {
+        try {
+            const response = await fetch(`${API_BASE}/status/${taskId}`);
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'ステータスの取得に失敗しました');
+            }
+            
+            // 進捗状況を表示（UIに進捗バーを追加することをお勧めします）
+            console.log(`進捗: ${data.progress}% - 状態: ${data.status}`);
+            
+            if (data.status === 'completed') {
+                clearInterval(progressInterval);
+                // ダウンロード完了、ファイルを取得
+                window.location.href = `${API_BASE}/download-file/${taskId}`;
+            } else if (data.status === 'error') {
+                clearInterval(progressInterval);
+                alert(`ダウンロードエラー: ${data.error_message}`);
+            }
+            
+        } catch (error) {
+            clearInterval(progressInterval);
+            console.error('進捗監視エラー:', error);
+        }
+    }, 1000);
+}
+
+// 秒数を分:秒形式に変換
+function formatDuration(seconds) {
+    if (!seconds) return '不明';
+    
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+}
+    </script>
+</body>
+</html>
